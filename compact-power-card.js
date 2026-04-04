@@ -1,5 +1,31 @@
-class CompactPowerCard extends (window.LitElement ||
-  Object.getPrototypeOf(customElements.get("ha-panel-lovelace"))) {
+const compactPowerCardPanel =
+  customElements.get("ha-panel-lovelace") || customElements.get("hui-masonry-view");
+
+const CompactPowerCardBase =
+  (compactPowerCardPanel && Object.getPrototypeOf(compactPowerCardPanel)) ||
+  window.LitElement;
+
+const compactPowerCardHtml =
+  (typeof window.html === "function" && window.html) ||
+  (typeof CompactPowerCardBase?.prototype?.html === "function" &&
+    CompactPowerCardBase.prototype.html) ||
+  (typeof window.LitElement?.prototype?.html === "function" &&
+    window.LitElement.prototype.html);
+
+const compactPowerCardCss =
+  (typeof window.css === "function" && window.css) ||
+  (typeof CompactPowerCardBase?.prototype?.css === "function" &&
+    CompactPowerCardBase.prototype.css) ||
+  (typeof window.LitElement?.prototype?.css === "function" &&
+    window.LitElement.prototype.css);
+
+if (!CompactPowerCardBase || !compactPowerCardHtml || !compactPowerCardCss) {
+  throw new Error(
+    "compact-power-card: Failed to resolve Lit html/css helpers from the Home Assistant frontend."
+  );
+}
+
+class CompactPowerCard extends CompactPowerCardBase {
 
   static get properties() {
     return {
@@ -9,8 +35,7 @@ class CompactPowerCard extends (window.LitElement ||
   }
 
   get html() {
-    return (window.LitElement ||
-      Object.getPrototypeOf(customElements.get("ha-panel-lovelace"))).prototype.html;
+    return compactPowerCardHtml;
   }
 
   static getConfigForm() {
@@ -561,10 +586,7 @@ class CompactPowerCard extends (window.LitElement ||
   }
 
   static get styles() {
-    const css =
-      (window.LitElement ||
-        Object.getPrototypeOf(customElements.get("ha-panel-lovelace"))).prototype.css;
-    return css`
+    return compactPowerCardCss`
       :host {
         --cpc-scale: 1;
         --cpc-text-scale: 1;
@@ -2107,13 +2129,17 @@ class CompactPowerCard extends (window.LitElement ||
     if (!Number.isFinite(value)) return 1;
     if (value === 0) return 0.4;
     if (threshold == null) return 1;
-    return Math.abs(value) < threshold ? 0.4 : 1;
+    return this._isThresholdSuppressed(value, threshold) ? 0.4 : 1;
+  }
+
+  _isThresholdSuppressed(value, threshold) {
+    if (!Number.isFinite(value) || !Number.isFinite(threshold)) return false;
+    if (threshold <= 0) return value <= threshold;
+    return Math.abs(value) < threshold;
   }
 
   _isBelowThreshold(value, threshold) {
-    if (!Number.isFinite(value)) return false;
-    if (!Number.isFinite(threshold) || threshold <= 0) return false;
-    return Math.abs(value) < threshold;
+    return this._isThresholdSuppressed(value, threshold);
   }
 
   _getNumeric(entityId, attribute = null) {
@@ -2410,7 +2436,7 @@ class CompactPowerCard extends (window.LitElement ||
 
     const applyThreshold = (value, threshold) => {
       if (threshold == null) return value;
-      return Math.abs(value) < threshold ? 0 : value;
+      return this._isThresholdSuppressed(value, threshold) ? 0 : value;
     };
 
     const pvThreshold = this._toWatts(this._parseThreshold(pvCfg.threshold), "W", true);
@@ -3137,7 +3163,11 @@ class CompactPowerCard extends (window.LitElement ||
       batteryNode,
       homeNode,
     } = layout;
-    const deviceYOffset = this._shouldUseExternalHeight() && rowCount < 3 ? 20 : 0;
+    const deviceYOffset =
+      (this._shouldUseExternalHeight() && rowCount < 3) ||
+      (!this._shouldUseExternalHeight() && (!hasPv || !hasBattery))
+        ? 20
+        : 0;
     const labelBonus = !hasPv || !hasBattery ? (rowCount >= 4 ? 2 : 1) : 0;
     const gridBatteryBonus =
       hasPv && hasBattery && pvLabels.length <= 4
@@ -3222,7 +3252,7 @@ class CompactPowerCard extends (window.LitElement ||
     const useThresholdForCalc = thresholdMode === "calculations";
     const applyThreshold = (value, threshold) => {
       if (threshold == null) return value;
-      return Math.abs(value) < threshold ? 0 : value;
+      return this._isThresholdSuppressed(value, threshold) ? 0 : value;
     };
 
     const pvDisplayUnit = "W";

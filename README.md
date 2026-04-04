@@ -101,7 +101,7 @@ Common keys for `pv`, `grid`, `home`, `battery`. The following settings are poss
 | ------------------- | ----------------------- | ------------------------------------------------------------------------------- |
 | Entity              | `entity`                | Sensor/entity id used for values.                                               |
 | Color               | `color`                 | Overrides line/icon/text color for that entity.                                 |
-| Threshold           | `threshold`             | Values below this are zeroed (per `threshold_mode`) and dimmed.                 |
+| Threshold           | `threshold`             | Values below this are zeroed (per `threshold_mode`) and dimmed. A threshold of `0` suppresses `0` and negative values.                 |
 | Decimals            | `decimal_places`        | Number of decimals to display (defaults to card-level `decimal_places`, or 1).                                      |
 | Unit override       | `unit` / `unit_of_measurement` | Converts `W` to `kW` if set to `kW`         |
 | Invert state values | `invert_state_values`   | Flip positive/negative for the grid/battery readings      |
@@ -214,7 +214,7 @@ Devices are power feeds within your home that you want to show in the card. By d
 | Name Label            | `name`                  | Show a label for each device. Can use either a string or entity ID. Only works with card set to 4 or more rows in height in the sections UI. [See here](https://github.com/pacemaker82/Compact-Power-Card#managing-the-size-of-the-card) for more                                              |
 | Icon             | `icon`                  | Optional icon for the device badge.                                              |
 | Color            | `color`                 | Optional color override for that device.                                         |
-| Threshold        | `threshold`             | Dims/zeros device below threshold (in watts) (per `threshold_mode`).                        |
+| Threshold        | `threshold`             | Dims/zeros device below threshold (in watts) (per `threshold_mode`). A threshold of `0` suppresses `0` and negative values.                        |
 | Subtract from home | `subtract_from_home` | `true` or `false` - Overrides card-level `subtract_devices_from_home` for this device. |
 | Force hide under threshold | `force_hide_under_threshold` | If true, hides the device entirely when under threshold. Will hide at 0 W if no threshold set. |
 | Decimals         | `decimal_places`        | Decimal places for that device (defaults to card-level `decimal_places`).                                                  |
