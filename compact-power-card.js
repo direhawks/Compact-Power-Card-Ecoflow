@@ -1211,7 +1211,45 @@ class CompactPowerCard extends CompactPowerCardBase {
   }
 
   _shouldUseExternalHeight() {
-    return Boolean(this.closest("div.card.fit-rows"));
+    if (this.closest("div.card.fit-rows")) return true;
+    if (this._isInCardEditor()) return false;
+
+    const rect = this.getBoundingClientRect ? this.getBoundingClientRect() : null;
+    const measuredHeight = this._getMeasuredExternalHeight(rect);
+    return measuredHeight > 220;
+  }
+
+  _closestComposed(selector) {
+    let node = this;
+    while (node) {
+      if (node instanceof Element && node.matches(selector)) return node;
+      const root = node.getRootNode ? node.getRootNode() : null;
+      node = node.parentNode || root?.host || null;
+    }
+    return null;
+  }
+
+  _isInCardEditor() {
+    return Boolean(
+      this._closestComposed(
+        "hui-card-element-editor, hui-dialog-edit-card, hui-card-preview, hui-card-picker, ha-dialog"
+      )
+    );
+  }
+
+  _getMeasuredExternalHeight(rect = null) {
+    const box = rect || (this.getBoundingClientRect ? this.getBoundingClientRect() : null);
+    const measuredHeight = this._hostHeight || box?.height || 0;
+    if (!measuredHeight) return 0;
+    if (this.closest("div.card.fit-rows")) return measuredHeight;
+
+    const viewportHeight = typeof window !== "undefined" ? window.innerHeight || 0 : 0;
+    if (!viewportHeight || !box) return measuredHeight;
+
+    const scrollY = typeof window !== "undefined" ? window.scrollY || 0 : 0;
+    const documentTop = box.top + scrollY;
+    const availableHeight = Math.max(0, viewportHeight - Math.max(0, documentTop));
+    return availableHeight > 0 ? Math.min(measuredHeight, availableHeight) : measuredHeight;
   }
 
   _getLayoutMetrics({ hasPv, hasBattery, hasAnyLabels }) {
@@ -1222,13 +1260,16 @@ class CompactPowerCard extends CompactPowerCardBase {
     const defaultHeight = !useExternalHeight && (!hasPv || !hasBattery) ? 150 : 184;
     const hostRect = this.getBoundingClientRect ? this.getBoundingClientRect() : null;
     const outerWidth = this._hostWidth != null ? this._hostWidth : hostRect?.width || defaultWidth;
-    const outerHeight = useExternalHeight
-      ? this._externalHeight != null
-        ? this._externalHeight
-        : this._hostHeight != null
-        ? this._hostHeight
-        : hostRect?.height || defaultHeight
-      : defaultHeight;
+    const measuredExternalHeight = this._getMeasuredExternalHeight(hostRect);
+    let outerHeight = defaultHeight;
+    if (useExternalHeight) {
+      outerHeight =
+        measuredExternalHeight ||
+        this._externalHeight ||
+        this._hostHeight ||
+        hostRect?.height ||
+        defaultHeight;
+    }
     const padX = 8; // ha-card left+right padding (4px each)
     const padY = 2; // bottom padding; top is 0
     const baseWidth = Math.max(0, outerWidth - padX);
@@ -1437,8 +1478,9 @@ class CompactPowerCard extends CompactPowerCardBase {
           this._hostWidth = newW;
           this._hostHeight = newH;
           const widthChanged = prevW != null && newW !== prevW;
+          const heightChanged = prevH != null && newH !== prevH;
           this._externalHeight = newH;
-          if (prevW == null || prevH == null) {
+          if (prevW == null || prevH == null || widthChanged || heightChanged) {
             this.requestUpdate();
           }
         }
