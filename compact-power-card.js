@@ -3542,18 +3542,26 @@ class CompactPowerCard extends CompactPowerCardBase {
       const numeric = isUnavailable ? 0 : this._getNumericMaybe(entity, attribute);
       const unit = st?.attributes?.unit_of_measurement || "";
       const decimals = this._getDecimalPlaces(src);
-      const numericW = isUnavailable ? 0 : this._toWatts(numeric, unit, true);
-      const hasNumeric = isUnavailable ? true : Number.isFinite(numericW);
+      const numericW = isPowerDevice
+        ? isUnavailable
+          ? 0
+          : this._toWatts(numeric, unit, true)
+        : null;
+      const hasPowerNumeric = isPowerDevice && (isUnavailable ? true : Number.isFinite(numericW));
       const unitOverride = this._getUnitOverride(src);
-      let val = hasNumeric
+      let val = hasPowerNumeric
         ? this._formatPowerWithOverride(numericW, decimals, "W", unitOverride ?? null)
         : this._formatEntity(entity, decimals, attribute, unitOverride);
       const color = src.color || homeColor;
-      const threshold = this._toWatts(this._parseThreshold(src.threshold), "W", true);
-      const opacity = hasNumeric ? this._opacityFor(numericW, threshold) : 1;
+      const threshold = isPowerDevice
+        ? this._toWatts(this._parseThreshold(src.threshold), "W", true)
+        : null;
+      const opacity = hasPowerNumeric ? this._opacityFor(numericW, threshold) : 1;
       const hidden =
-        (hasNumeric && this._isBelowThreshold(numericW, threshold)) ||
-        (this._coerceBoolean(src.force_hide_under_threshold, false) && numericW === 0);
+        (hasPowerNumeric && this._isBelowThreshold(numericW, threshold)) ||
+        (isPowerDevice &&
+          this._coerceBoolean(src.force_hide_under_threshold, false) &&
+          numericW === 0);
       const forceHideUnderThreshold = this._coerceBoolean(src.force_hide_under_threshold, false);
       let switchOn = false;
       if (isPowerDevice && switchEntity) {
@@ -3571,7 +3579,7 @@ class CompactPowerCard extends CompactPowerCardBase {
         color,
         opacity,
         hidden,
-        numeric: hasNumeric ? numericW : 0,
+        numeric: hasPowerNumeric ? numericW : numeric ?? 0,
         isPowerDevice,
         threshold,
         forceHideUnderThreshold,
