@@ -4307,15 +4307,15 @@ class CompactPowerCard extends CompactPowerCardBase {
   }
 }
 
-customElements.define("compact-power-card", CompactPowerCard);
+customElements.define("compact-power-card-ecoflow", CompactPowerCard);
 
 // Register card metadata for the Lovelace card picker
 if (window?.customCards) {
-  const exists = window.customCards.some((c) => c.type === "compact-power-card");
+  const exists = window.customCards.some((c) => c.type === "compact-power-card-ecoflow");
   if (!exists) {
     window.customCards.push({
-      type: "compact-power-card",
-      name: "Compact Power Card",
+      type: "compact-power-card-ecoflow",
+      name: "Compact Power Card Ecoflow",
       preview: true,
       description: "Compact power flow card with PV, grid, battery, and home flows.",
       documentationURL: "https://github.com/pacemaker82/Compact-Power-Card/blob/main/README.md",
@@ -4324,8 +4324,8 @@ if (window?.customCards) {
 } else if (window) {
   window.customCards = [
     {
-      type: "compact-power-card",
-      name: "Compact Power Card",
+      type: "compact-power-card-ecoflow",
+      name: "Compact Power Card Ecoflow",
       preview: true,
       description: "Compact power flow card with PV, grid, battery, and home flows.",
       documentationURL: "https://github.com/pacemaker82/Compact-Power-Card/blob/main/README.md",
