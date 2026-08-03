@@ -2828,12 +2828,14 @@ class CompactPowerCard extends CompactPowerCardBase {
     const battDischargeAfterHome = Math.max(battDischarge - batteryToHome, 0);
     const batteryToGrid = Math.min(battDischargeAfterHome, Math.max(gridExport - pvToGrid, 0));
 
-    // Grid import → remaining home, then remaining battery charge
-    const gridToHome = Math.min(gridImport, homeNeed);
-    homeNeed -= gridToHome;
-    const gridImportRemaining = Math.max(gridImport - gridToHome, 0);
-    const gridToBattery = Math.min(gridImportRemaining, chargeNeed);
+    // Grid import -> Passthrough til Ecoflow / Batteri først
+    // Alt Grid-import tvinges direkte til batteriet (Ecoflow) i stedet for Huset
+    const gridToBattery = Math.min(gridImport, chargeNeed > 0 ? chargeNeed : gridImport);
     chargeNeed -= gridToBattery;
+
+    const gridImportRemaining = Math.max(gridImport - gridToBattery, 0);
+    const gridToHome = Math.min(gridImportRemaining, homeNeed);
+    homeNeed -= gridToHome;
 
     this._setHomeGradient(
       pvToHome,
