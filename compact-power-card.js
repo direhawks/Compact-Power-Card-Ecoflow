@@ -2822,20 +2822,22 @@ class CompactPowerCard extends CompactPowerCardBase {
       pvToGrid = Math.min(pvRemaining, gridExport);
     }
 
-    // Battery discharge → remaining home, then export (only what PV export didn't cover)
-    const batteryToHome = Math.min(battDischarge, homeNeed);
-    homeNeed -= batteryToHome;
-    const battDischargeAfterHome = Math.max(battDischarge - batteryToHome, 0);
-    const batteryToGrid = Math.min(battDischargeAfterHome, Math.max(gridExport - pvToGrid, 0));
+      // ECOFLOW PASSTHROUGH LOGIK
 
-    // Grid import -> Passthrough til Ecoflow / Batteri først
-    // Alt Grid-import tvinges direkte til batteriet (Ecoflow) i stedet for Huset
-    const gridToBattery = Math.min(gridImport, chargeNeed > 0 ? chargeNeed : gridImport);
-    chargeNeed -= gridToBattery;
+      // 1. Grid Import sendes 100% direkte til Batteriet (Blå linje tværs over)
+      const gridToBattery = gridImport;
+      chargeNeed = Math.max(0, chargeNeed - gridToBattery);
 
-    const gridImportRemaining = Math.max(gridImport - gridToBattery, 0);
-    const gridToHome = Math.min(gridImportRemaining, homeNeed);
-    homeNeed -= gridToHome;
+      const gridImportRemaining = Math.max(0, gridImport - gridToBattery);
+      const gridToHome = 0; 
+
+      // 2. Huset forsynes KUN med hvad huset reelt trækker (homeNeed)
+      // Vi lader aldrig batteryToHome overskride det faktiske husbehov!
+      const batteryToHome = Math.min(battDischarge, homeNeed);
+      homeNeed = Math.max(0, homeNeed - batteryToHome);
+
+      const battDischargeAfterHome = Math.max(battDischarge - batteryToHome, 0);
+      const batteryToGrid = Math.min(battDischargeAfterHome, Math.max(gridExport - pvToGrid, 0)); 
 
     this._setHomeGradient(
       pvToHome,
