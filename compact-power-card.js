@@ -2790,10 +2790,11 @@ class CompactPowerCard extends CompactPowerCardBase {
     // Grid (import): home → battery (charge), only after PV/battery
     const gridImport = gridFlow < 0 ? -gridFlow : 0;
     const gridExport = gridFlow > 0 ? gridFlow : 0;
-    const battDischarge = batteryFlow > 0 ? batteryFlow : 0;
+    const battDischargeRaw = batteryFlow > 0 ? batteryFlow : 0;
     const battCharge = batteryFlow < 0 ? -batteryFlow : 0;
 
     let homeNeed = Math.max(homeEffectiveFlow, 0);
+    const battDischarge = Math.min(battDischargeRaw, homeNeed);
     let chargeNeed = battCharge;
 
     const forceCharge = battCharge > 0 && gridImport > 0;
