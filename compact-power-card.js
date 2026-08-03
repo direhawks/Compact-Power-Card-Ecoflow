@@ -2832,7 +2832,7 @@ class CompactPowerCard extends CompactPowerCardBase {
       const gridImportRemaining = Math.max(0, gridImport - gridToBattery);
       const gridToHome = 0; 
 
-      // 2. Huset forsynes KUN med hvad huset reelt trækker (homeNeed)
+      // 2. Huset forsynes KUN med hvad huset reelt traekker (homeNeed)
       // Vi lader aldrig batteryToHome overskride det faktiske husbehov!
       const batteryToHome = Math.min(battDischarge, homeNeed);
       homeNeed = Math.max(0, homeNeed - batteryToHome);
